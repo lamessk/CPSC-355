@@ -1,0 +1,102 @@
+/*Lamess Kharfan          Student Number: 10150607
+CPSC 355, Fall 2015     Leonard Manzara
+Assignment 1- Computes the minimum of the polynomial
+        2x^3 - 18x^2 + 10x + 39
+within the range of -2 through 11. This is accomplished by
+stepping through the domain one by one and testing for a new
+minimum value. Values of x, y, and the minimum are printed
+after every iteration of the loop, value of the mimimum is stored
+into %l0 at the end of the program.
+Version 1- No use of macros and m4, delay slots present.
+*/
+
+
+fmty:   .asciz          "The value of y is %d\n"
+fmtx:   .asciz          "The value of x is %d\n"
+fmtm:   .asciz          "The value of the min is %d\n"
+
+.global main
+
+main:
+        save %sp, -96, %sp
+
+        mov     -3, %l1         ! Place the first value of the domain in %l1
+        ba      top             ! Always branch to the loop
+        nop                     ! Delay slot
+
+calc:
+
+        /* Add constant to y */
+        mov     39, %l2         ! Place 39 into %l2, register for y value
+
+
+        /* Calculate -18x^2, add to y */
+        mov     %l1, %o0        ! Move value of x into %o0
+        mov     %l1, %o1        ! Move value of x into %o1
+        call    .mul            ! Calculate value of x^2, store in %o0
+        nop                     ! Delay slot
+        mov     %o0, %l3        ! Save x^2 for next calculation
+        mov     -18, %o1        ! Move -18 into %o1
+        call    .mul            ! Calculate -18x^2, store in %o0
+        nop                     ! Delay slot
+        add     %o0, %l2, %l2   ! Add -18^2 to y value in %l2
+
+        /* Calculate 2x^3, add to y */
+        mov     %l3, %o0        ! Move x^2 value into %o0
+        mov     %l1, %o1        ! Move x value into %o1
+        call    .mul            ! Calculate the value of x^2
+        nop                     ! Delay slot
+        mov     2, %o1          ! Move 2 into %o1
+        call    .mul            ! Calculate value of 2x^3, store in %o0
+        nop                     ! Delay slot
+        add     %o0, %l2, %l2   ! Add 2x^3 to y value in %l2
+
+         /* Calculate 10x, add to y */
+        mov     10, %o0         ! Place 10 into %o0 for calculation
+        mov     %l1, %o1        ! Place x value into %o1 for calculation
+        call    .mul            ! calculate value of 10x, store in %o0
+        nop                     ! Delay slot
+        add     %o0, %l2, %l2   ! Add 10x to y value in %l2
+
+
+
+        /* Check for if this is the first calculation */
+
+        mov     -2, %o0         ! Move -2 into %o0
+        cmp     %o0, %l1        ! Compare -2 to the x value, check if this is the first calculation
+        bne     cmpy            ! If this this the first calc, go to cmpy to check for new min
+        nop                     ! Delay slot
+        mov     %l2, %l0        ! Move y value into min value in %l0 if this is the first calculation
+
+
+cmpy:
+        cmp     %l2, %l0        ! Compare y vale to the current min
+        bge     print            ! If y is greater than min skip to same label
+        nop                     ! Delay slot
+        mov     %l2, %l0        ! If y is less than min than replace min with value of y
+
+print:
+        set     fmtx, %o0       ! Value of x string into %o0
+        mov     %l1, %o1        ! Value of x into %o1
+        call    printf          ! Print the value of x string to the screen
+        nop                     ! Delay slot
+
+        set     fmty, %o0       ! Value of y string into %o0
+        mov     %l2, %o1        ! Value of y into %o1
+        call    printf          ! Print value of y string to the screen
+        nop                     ! Delay slot
+
+        set     fmtm, %o0       ! Value of min string to %o0
+        mov     %l0, %o1        ! Value of min to %o1
+        call    printf          ! Print value of min string to the screen
+        nop                     ! Delay slot
+
+
+top:
+	inc	%l1		! Increment value of x by 1
+        cmp     %l1, 11         ! Check if x is less than or equal to upper limit of 11
+        ble     calc            ! if x <= 11 then do the calculation for the next value of x
+        nop                     ! Delay slot
+
+mov     1, %g1                  ! Exit request
+ta      0                       ! Trap to system
